@@ -1,4 +1,7 @@
 // craco.config.js
+
+const path = require('path');
+
 module.exports = {
   style: {
     postcss: {
@@ -7,5 +10,10 @@ module.exports = {
         require('autoprefixer'),
       ],
     },
+  },
+  webpack: {
+    alias: {
+      '~': path.join(path.resolve(__dirname, './src')),
+    }
   },
 }

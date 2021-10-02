@@ -1,15 +1,40 @@
-function App() {
-  return (
-    <div className="bg-blue-400 h-screen grid">
-      <div className="w-3/4 my-auto ml-20">
-        <h1 className="text-5xl font-bold mb-10 text-white">JIT mode is cool</h1>
-        <p className="text-white">
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit. Explicabo officia earum ducimus neque obcaecati consequuntur ratione accusamus at officiis tempore,
-          magnam non debitis fugit unde alias id quidem necessitatibus.
-        </p>
-      </div>
-    </div>
+import { Switch, Route, BrowserRouter } from "react-router-dom";
+import {
+  WalletProvider,
+  ConnectionProvider,
+} from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+
+import config from "~/config";
+import Landing from "~/routes/landing";
+import Mint from "~/routes/mint";
+import WalletSignalHandler from "~/shared/walletSignalHandler";
+
+const providers = [
+  [BrowserRouter, {}],
+  [ConnectionProvider, { endpoint: config.solanaRpcEndpoint }],
+  [WalletProvider, { wallets: config.solanaWallets, autoConnect: true }],
+  [WalletModalProvider, {}],
+  [WalletSignalHandler, {}],
+];
+
+const RootProvider = ({ children }) =>
+  providers.reduceRight(
+    (acc, [Comp, props]) => <Comp {...props}>{acc}</Comp>,
+    children
   );
-}
+
+const Routes = () => (
+  <Switch>
+    <Route path="/" exact={true} component={Landing} />
+    <Route path="/mint" exact={true} component={Mint} />
+  </Switch>
+);
+
+const App = () => (
+  <RootProvider>
+    <Routes />
+  </RootProvider>
+);
 
 export default App;
