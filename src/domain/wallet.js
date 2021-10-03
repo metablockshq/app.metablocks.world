@@ -1,35 +1,27 @@
 import { swap, deref, Atom } from "@dbeining/react-atom";
 import { PublicKey, Connection } from "@solana/web3.js";
 import { Program, Provider, web3 } from "@project-serum/anchor";
+import sha256 from "crypto-js/sha256";
 
 import config from "~/config";
 import augmentorIdl from "~/domain/augmentor.json";
 
 const augmentorProgramId = new PublicKey(augmentorIdl.metadata.address);
-const { SystemProgram } = web3;
+const { Keypair, SystemProgram } = web3;
+const baseAccount = Keypair.generate();
 
-const errors = {
-  providerNotSet: "The provider is not initialized",
-};
+const errors = {};
 
 const initState = {
-  wallet: null,
-  anchorWallet: null,
-  isConnected: false,
-  provider: null,
   initAugmentorError: null,
   initialisingAugmentor: null,
+  inventory: [],
+  inventoryIndex: [],
 };
 
 const state = Atom.of(initState);
 
-const setWallet = (wallet, anchorWallet) => {
-  swap(state, (state) => {
-    return { ...state, wallet, anchorWallet, isConnected: wallet.connected };
-  });
-};
-
-const computeProvider = (wallet) => {
+const providerFactory = (wallet) => {
   const opts = {
     preflightCommitment: "processed",
   };
@@ -38,40 +30,46 @@ const computeProvider = (wallet) => {
     config.solanaRpcEndpoint,
     opts.preflightCommitment
   );
-  const provider = new Provider(conn, wallet, opts.preflightCommitment);
-
-  swap(state, (state) => {
-    return { ...state, provider };
-  });
+  return new Provider(conn, wallet, opts.preflightCommitment);
 };
 
-const computeAugmentorInitialized = async (wallet) => {
-  const { provider } = deref(state);
-  const program = new Program(augmentorIdl, augmentorProgramId, provider);
+const augmentorProgramFactory = (wallet) => {
+  const provider = providerFactory(wallet);
+  return new Program(augmentorIdl, augmentorProgramId, provider);
+};
 
-  /* const buffer = await program.account.baseAccount.fetch(wallet.publicKey);
+const readAugmentor = async (wallet) => {
+  const program = augmentorProgramFactory(wallet);
 
-   * console.log("determineaugmentorinitilizationstate", buffer); */
+  try {
+    const buffer = await program.account.baseAccount.fetch(
+      baseAccount.publicKey
+    );
+
+    console.log("buffer ----->  ", buffer);
+    swap(state, (s) => ({
+      ...s,
+      inventory: buffer.inventory,
+      inventoryIndex: buffer.inventoryIndex,
+    }));
+  } catch (e) {
+    console.log("readAugmentorError  ----->  ", e);
+  }
 };
 
 const initAugmentor = async (wallet) => {
-  const { provider } = deref(state);
-  const program = new Program(augmentorIdl, augmentorProgramId, provider);
+  const program = augmentorProgramFactory(wallet);
   const publicKey = wallet.publicKey.toString();
-
-  if (!provider) {
-    swap(state, (s) => ({ ...s, initAugmentorError: errors.providerNotSet }));
-  }
 
   try {
     swap(state, (s) => ({ ...state, initialisingAugmentor: true }));
     await program.rpc.init({
       accounts: {
-        baseAccount: wallet.publicKey.toString(),
-        user: provider.wallet.publicKey,
+        baseAccount: baseAccount.publicKey,
+        user: wallet.publicKey,
         systemProgram: SystemProgram.programId,
       },
-      signers: [wallet],
+      signers: [baseAccount],
     });
     swap(state, (s) => ({
       ...state,
@@ -79,7 +77,11 @@ const initAugmentor = async (wallet) => {
       initAugmentorError: null,
     }));
 
-    computeAugmentorInitialized(wallet);
+    const buffer = await program.account.baseAccount.fetch(
+      baseAccount.publicKey
+    );
+
+    console.log(buffer);
   } catch (e) {
     swap(state, (s) => ({
       ...state,
@@ -89,10 +91,28 @@ const initAugmentor = async (wallet) => {
   }
 };
 
-const listItem = (hash, name, price, json) => {
+const listItem = async (wallet, name, price, json) => {
   const data = JSON.parse(json);
-  const dataWithNameAndHash = { ...data, name, hash };
+  const dataWithNameAndPrice = { ...data, name, price };
+  const hash = sha256(JSON.stringify(dataWithNameAndPrice)).toString();
+  const program = augmentorProgramFactory(wallet);
+
+  try {
+    await program.rpc.listItem(
+      hash,
+      btoa(JSON.stringify(dataWithNameAndPrice)),
+      {
+        accounts: {
+          baseAccount: baseAccount.publicKey,
+        },
+      }
+    );
+  } catch (e) {
+    console.log("error", e, e.msg);
+  }
+
+  await readAugmentor(wallet);
 };
 
 export default state;
-export { setWallet, computeProvider, computeAugmentorInitialized };
+export { readAugmentor, initAugmentor, listItem };
