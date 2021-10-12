@@ -5,6 +5,8 @@ const menuItems = [
   { label: "Mint", to: "/mint" },
   { label: "Foundation", to: "/" },
   { label: "Inventory", to: "/inventory" },
+  { label: "Transactions", to: "/transactions" },
+  { label: "Help", to: "/help" },
 ];
 
 const Menu = ({ items }) => (

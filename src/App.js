@@ -6,9 +6,12 @@ import {
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 
 import config from "~/config";
-import Landing from "~/routes/landing";
-import Mint from "~/routes/mint";
-import Inventory from "~/routes/inventory";
+import Foundation from "~/screens/foundation";
+import Mint from "~/screens/mint";
+import Inventory from "~/screens/inventory";
+import Transactions from "~/screens/transactions";
+import BrowserExtension from "~/screens/browserExtension";
+import Help from "~/screens/help";
 import WalletSignalHandler from "~/shared/walletSignalHandler";
 
 const providers = [
@@ -31,9 +34,16 @@ const RootProvider = ({ children }) =>
 
 const Routes = () => (
   <Switch>
-    <Route path="/" exact={true} component={Landing} />
+    <Route path="/" exact={true} component={Foundation} />
     <Route path="/mint" exact={true} component={Mint} />
     <Route path="/inventory" exact={true} component={Inventory} />
+    <Route path="/transactions" exact={true} component={Transactions} />
+    <Route path="/help" exact={true} component={Help} />
+    <Route
+      path="/browser-extension"
+      exact={true}
+      component={BrowserExtension}
+    />
   </Switch>
 );
 

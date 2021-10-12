@@ -1,4 +1,4 @@
-import { swap, deref, Atom } from "@dbeining/react-atom";
+import { swap, Atom } from "@dbeining/react-atom";
 import { PublicKey, Connection } from "@solana/web3.js";
 import { Program, Provider, web3 } from "@project-serum/anchor";
 import sha256 from "crypto-js/sha256";
@@ -10,13 +10,16 @@ const augmentorProgramId = new PublicKey(augmentorIdl.metadata.address);
 const { Keypair, SystemProgram } = web3;
 const baseAccount = Keypair.generate();
 
-const errors = {};
-
 const initState = {
+  readingAugmentor: false,
+  reagAugmentorError: null,
   initAugmentorError: null,
   initialisingAugmentor: null,
+  isAugmentorReady: false,
   inventory: [],
   inventoryIndex: [],
+  txLog: [],
+  boughtItemIndexes: [],
 };
 
 const state = Atom.of(initState);
@@ -40,30 +43,30 @@ const augmentorProgramFactory = (wallet) => {
 
 const readAugmentor = async (wallet) => {
   const program = augmentorProgramFactory(wallet);
+  swap(state, (s) => ({ ...s, readingAugmentor: true }));
 
   try {
     const buffer = await program.account.baseAccount.fetch(
       baseAccount.publicKey
     );
 
-    console.log("buffer ----->  ", buffer);
     swap(state, (s) => ({
       ...s,
+      readingAugmentor: false,
       inventory: buffer.inventory,
       inventoryIndex: buffer.inventoryIndex,
     }));
-  } catch (e) {
-    console.log("readAugmentorError  ----->  ", e);
+  } catch (err) {
+    swap(state, (s) => ({ ...s, readAugmentorError: err }));
   }
 };
 
 const initAugmentor = async (wallet) => {
   const program = augmentorProgramFactory(wallet);
-  const publicKey = wallet.publicKey.toString();
 
   try {
-    swap(state, (s) => ({ ...state, initialisingAugmentor: true }));
-    await program.rpc.init({
+    swap(state, (s) => ({ ...s, initialisingAugmentor: true }));
+    const txId = await program.rpc.init({
       accounts: {
         baseAccount: baseAccount.publicKey,
         user: wallet.publicKey,
@@ -71,22 +74,23 @@ const initAugmentor = async (wallet) => {
       },
       signers: [baseAccount],
     });
+
     swap(state, (s) => ({
-      ...state,
+      ...s,
       initialisingAugmentor: false,
       initAugmentorError: null,
+      isAugmentorReady: true,
+      txLog: [...s.txLog, { type: "init", id: txId }],
     }));
 
-    const buffer = await program.account.baseAccount.fetch(
-      baseAccount.publicKey
-    );
-
-    console.log(buffer);
+    readAugmentor(wallet);
   } catch (e) {
+    console.log("Augmentor init error", e);
     swap(state, (s) => ({
-      ...state,
+      ...s,
       initialisingAugmentor: false,
       initAugmentorError: e,
+      isAugmentorReady: false,
     }));
   }
 };
@@ -98,7 +102,7 @@ const listItem = async (wallet, name, price, json) => {
   const program = augmentorProgramFactory(wallet);
 
   try {
-    await program.rpc.listItem(
+    const txId = await program.rpc.listItem(
       hash,
       btoa(JSON.stringify(dataWithNameAndPrice)),
       {
@@ -107,6 +111,10 @@ const listItem = async (wallet, name, price, json) => {
         },
       }
     );
+    swap(state, (s) => ({
+      ...s,
+      txLog: [...s.txLog, { type: "create-drop-item", id: txId }],
+    }));
   } catch (e) {
     console.log("error", e, e.msg);
   }
@@ -114,5 +122,12 @@ const listItem = async (wallet, name, price, json) => {
   await readAugmentor(wallet);
 };
 
+const buyItemBypassContract = (itemIndex) => {
+  swap(state, (s) => ({
+    ...s,
+    boughtItemIndexes: [...s.boughtItemIndexes, itemIndex],
+  }));
+};
+
 export default state;
-export { readAugmentor, initAugmentor, listItem };
+export { readAugmentor, initAugmentor, listItem, buyItemBypassContract };
