@@ -85,7 +85,7 @@ const Wallet = () => (
 const Nav = () => (
   <div className="navbar m-4 shadow-lg bg-green-600 text-neutral-content rounded-box">
     <div className="flex-1 hidden px-2 mx-2 lg:flex">
-      <span className="text-lg font-bold ml-3">Meta Blocks Beta</span>
+      <span className="text-lg font-bold ml-3">Meta Blocks - Devnet</span>
     </div>
     <Menu items={menuItems} />
     <Wallet />

@@ -10,7 +10,9 @@ import { listItem, initAugmentor, readAugmentor } from "~/domain/wallet";
 import TextInput from "~/shared/textInput";
 import BlockPreview from "~/shared/blockPreview";
 
-const ConnectWallet = () => <div>Connect your wallet to continue</div>;
+const ConnectWallet = () => (
+  <div>Connect your wallet to continue. Make sure that you are on Devnet.</div>
+);
 
 const ContractState = () => {
   const { inventory, inventoryIndex } = useAtom(walletState);

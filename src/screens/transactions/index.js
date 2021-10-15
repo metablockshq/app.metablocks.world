@@ -2,9 +2,10 @@ import { useAtom } from "@dbeining/react-atom";
 
 import walletState from "~/domain/wallet";
 import Nav from "~/shared/nav";
+import config from "~/config";
 
 const getTxUrl = (txId) =>
-  `https://explorer.solana.com/tx/${txId}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`;
+  `https://explorer.solana.com/tx/${txId}?cluster=custom&customUrl=${config.solanaRpcEndpoint}`;
 
 const Tx = ({ tx }) => (
   <div>

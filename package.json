@@ -30,7 +30,6 @@
     "start": "TAILWIND_MODE=watch craco start",
     "build": "craco build",
     "test": "craco test",
-    "eject": "react-scripts eject",
     "serve": "npx serve build"
   },
   "eslintConfig": {
