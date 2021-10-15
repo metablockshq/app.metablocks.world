@@ -18,7 +18,7 @@ const Tx = ({ tx }) => (
         rel="noreferrer"
         href={getTxUrl(tx.id)}
       >
-        {tx.id}
+        {tx.id} (on {config.solanaRpcEndpoint} cluster)
       </a>
     </div>
   </div>

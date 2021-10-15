@@ -11,7 +11,13 @@ import TextInput from "~/shared/textInput";
 import BlockPreview from "~/shared/blockPreview";
 
 const ConnectWallet = () => (
-  <div>Connect your wallet to continue. Make sure that you are on Devnet.</div>
+  <div>
+    Connect your wallet to continue.{" "}
+    <span className="font-bold text-green-700">
+      Make sure that you are on Solana Devnet
+    </span>
+    .
+  </div>
 );
 
 const ContractState = () => {
