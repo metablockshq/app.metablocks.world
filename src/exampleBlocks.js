@@ -13,6 +13,7 @@ const exampleBlocks = [
   {
     name: "Base Layer - Blonde Hair, Black Eyes, Feminine",
     price: 0,
+    hidden: true,
     json: JSON.stringify({
       type: "base-layer",
       eyeColor: "black",

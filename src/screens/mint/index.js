@@ -68,20 +68,22 @@ const MintForm = ({ name, setName, price, setPrice, json, setJson }) => {
           Submit
         </button>
       </div>
-      {exampleBlocks.map((b) => (
-        <button
-          disabled={!isAugmentorReady}
-          key={b.name}
-          className="btn btn-sm my-3 mr-1"
-          onClick={() => {
-            setName(b.name);
-            setPrice(b.price);
-            setJson(b.json);
-          }}
-        >
-          ex: {b.name}
-        </button>
-      ))}
+      {exampleBlocks
+        .filter((e) => !e.hidden)
+        .map((b) => (
+          <button
+            disabled={!isAugmentorReady}
+            key={b.name}
+            className="btn btn-sm my-3 mr-1"
+            onClick={() => {
+              setName(b.name);
+              setPrice(b.price);
+              setJson(b.json);
+            }}
+          >
+            ex: {b.name}
+          </button>
+        ))}
     </div>
   );
 };
